@@ -7,7 +7,6 @@
 
 ### Imports and Setup
 
-import eia
 import requests
 import numpy as np
 import pandas as pd
@@ -29,10 +28,7 @@ json_list_of_dicts = call_eia.json()["response"]["data"]
 df = pd.DataFrame(json_list_of_dicts)
 
 
-
-
-
-### Clean & Filter
+### Clean & Filter ###
 
 # sort by period
 df = df.sort_values(by="period", ascending=True)
@@ -67,13 +63,9 @@ df['state'] = df['state'].str[:-57]
 df['state'] = df['state'].str.replace("Federal Offshore--", "")
 
 
-
-
-
-### Visuals + Analysis
+### Visuals + Analysis ###
 
 sns.set_theme(style="darkgrid")
-
 
 ## plot1: Total US Production
 # Visual1
@@ -96,8 +88,6 @@ pct_inc_dec = "{:.0%}".format(value_latest / value_2005 - 1)
 print("\n--------------- Analysis ---------------")
 print("Total U.S. crude oil production was " + str(value_latest) + " thousand barrels per day in " + period_latest.astype('str'))
 print("This is a " + str(amt_inc_dec) + " thousand barrel per day" + (" increase" if amt_inc_dec >=0 else " decrease)") + " vs. 2005, or " + ("+" if amt_inc_dec >=0 else "-") + str(pct_inc_dec))
-
-
 
 
 
@@ -124,8 +114,6 @@ print("This is a " + str(amt_inc_dec) + " thousand barrel per day" + (" increase
 
 
 
-
-
 ## plot3: Top 10 crude oil producing states, latest period
 # Visual3
 df_state_latest_prod = df[df["period"] == df["period"].max()].sort_values(by="value", ascending=False)
@@ -148,14 +136,15 @@ for ind in df_plot3.index:
 
 
 
-# plot4: Top 10 crude oil producing states in 2021, % of total
+## plot4: Top 10 crude oil producing states in 2021, % of total
+# Visual4
 df_total_2021_prod = df_total_prod.loc[2021]["value"]
 
-df_state_2021_prod_filtered["% of total"] = df_state_2021_prod_filtered["value"].div(df_total_2021_prod)
+df_state_latest_prod_top10["pct of total"] = df_state_latest_prod_top10["value"].div(df_total_2021_prod)
 
-df_plot4 = df_state_2021_prod_filtered
-ax = sns.barplot(data=df_plot4, x="state", y="% of total")
-ax.set(xlabel="state", ylabel="% of total", title="Top 10 Crude Oil Production States - 2021")
+df_plot4 = df_state_latest_prod_top10
+ax = sns.barplot(data=df_plot4, x="state", y="pct of total")
+ax.set(xlabel="state", ylabel="pct of total", title="Top 10 Crude Oil Production States - 2021")
 ax.yaxis.set_major_formatter(mtick.PercentFormatter(xmax=1))
 plt.xticks(rotation=45, ha="right")
 plt.show()
@@ -165,10 +154,11 @@ plt.show()
 
 
 # plot5: % share of total US production since 2005, top 5 states
+# Visual5
 df_indexed = df.set_index(["period", "duoarea", "area-name", "state", "units"])
 df_pct_of_total = (df_indexed/ df_total_prod).reset_index()
 
-top_5_producers = df_state_2021_prod[0:5]["state"].unique()
+top_5_producers = df_state_latest_prod[0:5]["state"].unique()
 
 df_plot5 = df_pct_of_total[df_pct_of_total["state"].isin(top_5_producers)].sort_values(by=["period", "value"], ascending=[False, False])
 ax = sns.lineplot(data=df_plot5, x="period", y="value", hue="state")
